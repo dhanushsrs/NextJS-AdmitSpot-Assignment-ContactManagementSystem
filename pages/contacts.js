@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
-import { authenticate } from "../lib/auth"; // Import the authenticate function
 
 export default function Contacts() {
   const [contacts, setContacts] = useState([]);
@@ -8,9 +7,15 @@ export default function Contacts() {
 
   useEffect(() => {
     const fetchContacts = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        router.push("/login"); // Redirect to login if no token
+        return;
+      }
+
       const res = await fetch("/api/contacts", {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${token}`,
         },
       });
 
@@ -23,17 +28,21 @@ export default function Contacts() {
     };
 
     fetchContacts();
-  }, []);
+  }, [router]);
 
   return (
     <div>
       <h1>Your Contacts</h1>
       <ul>
-        {contacts.map((contact) => (
-          <li key={contact.id}>
-            {contact.name} - {contact.email}
-          </li>
-        ))}
+        {contacts.length > 0 ? (
+          contacts.map((contact) => (
+            <li key={contact.id}>
+              {contact.name} - {contact.email}
+            </li>
+          ))
+        ) : (
+          <li>No contacts available.</li>
+        )}
       </ul>
     </div>
   );
